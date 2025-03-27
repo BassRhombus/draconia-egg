@@ -1,0 +1,70 @@
+{
+  "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": null
+  },
+  "exported_at": "2025-03-27T12:00:00Z",
+  "name": "Draconia",
+  "author": "admin@example.com",
+  "description": "A server egg for running a Draconia game server through Steam.",
+  "features": [
+    "steam_disk_space"
+  ],
+  "images": [
+    "ghcr.io/pterodactyl/games:debian"
+  ],
+  "file_denylist": [],
+  "startup": "./start.sh",
+  "config": {
+    "files": "{}",
+    "startup": "{\r\n    \"done\": \"Server started\"\r\n}",
+    "logs": "{\r\n    \"custom\": false,\r\n    \"location\": \"logs/latest.log\"\r\n}",
+    "stop": "stop"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!\/bin\/bash\r\n# Draconia Server Installation Script\r\n\r\napt-get update\r\napt-get install -y wget curl lib32gcc1 lib32stdc++6 unzip\r\n\r\nmkdir -p \/tmp\r\nmkdir -p \/server\/steam\r\ncd \/tmp\r\n\r\necho \"Installing SteamCMD...\"\r\nwget https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzf steamcmd_linux.tar.gz -C \/server\/steam\r\nrm steamcmd_linux.tar.gz\r\n\r\necho \"Installing Draconia Server...\"\r\nAPPID=${STEAM_APPID}\r\n\r\n\/server\/steam\/steamcmd.sh +force_install_dir \/server +login anonymous +app_update $APPID validate +quit\r\n\r\ncd \/server\r\nif [ ! -f config.yml ]; then\r\n    echo \"Creating default configuration file...\"\r\n    echo \"server_name: ${SERVER_NAME:-Draconia Server}\" > config.yml\r\n    echo \"server_port: ${SERVER_PORT:-25565}\" >> config.yml\r\n    echo \"max_players: ${MAX_PLAYERS:-20}\" >> config.yml\r\n    echo \"# Add more configuration options as needed\" >> config.yml\r\nfi\r\n\r\necho \"#!/bin\/bash\" > \/server\/start.sh\r\necho \"cd \/server\" >> \/server\/start.sh\r\necho \"./DraconiaServer\" >> \/server\/start.sh\r\nchmod +x \/server\/start.sh\r\n\r\necho \"#!/bin\/bash\" > \/server\/stop.sh\r\necho \"pkill -f DraconiaServer\" >> \/server\/stop.sh\r\nchmod +x \/server\/stop.sh\r\n\r\necho \"Installation complete!\"",
+      "container": "ghcr.io/pterodactyl/installers:debian",
+      "entrypoint": "bash"
+    }
+  },
+  "variables": [
+    {
+      "name": "Server Name",
+      "description": "The name of your Draconia server",
+      "env_variable": "SERVER_NAME",
+      "default_value": "Draconia Server",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:64"
+    },
+    {
+      "name": "Server Port",
+      "description": "The port that your Draconia server will run on",
+      "env_variable": "SERVER_PORT",
+      "default_value": "25565",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|numeric|between:1,65535"
+    },
+    {
+      "name": "Maximum Players",
+      "description": "The maximum number of players allowed on the server",
+      "env_variable": "MAX_PLAYERS",
+      "default_value": "20",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|numeric|min:1"
+    },
+    {
+      "name": "Steam App ID",
+      "description": "The Steam App ID for Draconia server",
+      "env_variable": "STEAM_APPID",
+      "default_value": "1956500",
+      "user_viewable": false,
+      "user_editable": false,
+      "rules": "required|string|max:20"
+    }
+  ]
+}
