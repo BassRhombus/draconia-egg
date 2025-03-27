@@ -11,9 +11,9 @@
   "features": [
     "steam_disk_space"
   ],
-  "images": [
-    "ghcr.io/pterodactyl/games:debian"
-  ],
+  "docker_images": {
+    "ghcr.io/pterodactyl/games:debian": "Default Debian Image"
+  },
   "file_denylist": [],
   "startup": "./start.sh",
   "config": {
@@ -24,8 +24,8 @@
   },
   "scripts": {
     "installation": {
-      "script": "#!\/bin\/bash\r\n# Draconia Server Installation Script\r\n\r\napt-get update\r\napt-get install -y wget curl lib32gcc1 lib32stdc++6 unzip\r\n\r\nmkdir -p \/tmp\r\nmkdir -p \/server\/steam\r\ncd \/tmp\r\n\r\necho \"Installing SteamCMD...\"\r\nwget https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzf steamcmd_linux.tar.gz -C \/server\/steam\r\nrm steamcmd_linux.tar.gz\r\n\r\necho \"Installing Draconia Server...\"\r\nAPPID=${STEAM_APPID}\r\n\r\n\/server\/steam\/steamcmd.sh +force_install_dir \/server +login anonymous +app_update $APPID validate +quit\r\n\r\ncd \/server\r\nif [ ! -f config.yml ]; then\r\n    echo \"Creating default configuration file...\"\r\n    echo \"server_name: ${SERVER_NAME:-Draconia Server}\" > config.yml\r\n    echo \"server_port: ${SERVER_PORT:-25565}\" >> config.yml\r\n    echo \"max_players: ${MAX_PLAYERS:-20}\" >> config.yml\r\n    echo \"# Add more configuration options as needed\" >> config.yml\r\nfi\r\n\r\necho \"#!/bin\/bash\" > \/server\/start.sh\r\necho \"cd \/server\" >> \/server\/start.sh\r\necho \"./DraconiaServer\" >> \/server\/start.sh\r\nchmod +x \/server\/start.sh\r\n\r\necho \"#!/bin\/bash\" > \/server\/stop.sh\r\necho \"pkill -f DraconiaServer\" >> \/server\/stop.sh\r\nchmod +x \/server\/stop.sh\r\n\r\necho \"Installation complete!\"",
-      "container": "ghcr.io/pterodactyl/installers:debian",
+      "script": "#!/bin/bash\n# Draconia Server Installation Script\n\napt update\napt install -y curl wget tar unzip lib32gcc-s1\n\nmkdir -p /mnt/server/steam\ncd /mnt/server\n\ncurl -sSL -o steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\ntar -xzvf steamcmd.tar.gz -C /mnt/server/steam\nrm steamcmd.tar.gz\n\ncd /mnt/server/steam\n\nchmod +x steamcmd.sh\n\n./steamcmd.sh +quit\n\necho \"Installing game server...\"\n./steamcmd.sh +force_install_dir /mnt/server +login anonymous +app_update ${STEAM_APPID} validate +quit\n\necho \"Creating server start script...\"\ncat > /mnt/server/start.sh <<EOF\n#!/bin/bash\ncd /mnt/server\n./DraconiaServer\nEOF\n\nchmod +x /mnt/server/start.sh\necho \"Installation complete!\"",
+      "container": "debian:bullseye-slim",
       "entrypoint": "bash"
     }
   },
